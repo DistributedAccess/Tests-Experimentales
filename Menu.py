@@ -48,7 +48,9 @@ def Normal(Opciones):
     sleep(0.2)
     print('\n\t\t\t\t\t{0}[{1}5{2}]{3} Configurar Componentes.................................................{4}{5}').format(YELLOW, RED, YELLOW, WHITE, GREEN, Opciones[4])
     sleep(0.2)
-    print("\n\t\t\t\t\t{0}[{1}6{2}]{3} Let's Rock {4}(Comenzar Prediccion)").format(YELLOW, RED, YELLOW, RED,WHITE)
+    print('\n\t\t\t\t\t{0}[{1}6{2}]{3} Configurar K...........................................................{4}{5}').format(YELLOW, RED, YELLOW, WHITE, GREEN, Opciones[4])
+    sleep(0.2)
+    print("\n\t\t\t\t\t{0}[{1}7{2}]{3} Let's Rock {4}(Comenzar Prediccion)").format(YELLOW, RED, YELLOW, RED,WHITE)
     sleep(0.2)
     print('\n\t\t\t\t\t{0}[{1}E{2}]{3} Regresar al Menu Principal\n\n\n').format(YELLOW, RED, YELLOW, WHITE)
 
@@ -126,6 +128,15 @@ def Porcentaje():
     print('\n\t\t\t\t\t\t\t{0}NOTA: El porcentaje restante sera utilizado en la Prediccion \n').format(GREEN)
 
     etiqueta = ('\n\t\t\t\t\t\t\t{0}Porcentaje{1}> '.format(BLUE, WHITE))
+    Op = raw_input(etiqueta)
+
+    return int(Op)
+
+def K():
+    os.system("clear||cls")
+    print('\n\t\t\t\t\t\t{0}Escriba el numero de K para la validacion Cruzada \n\n\n\n').format(GREEN)
+
+    etiqueta = ('\n\t\t\t\t\t\t\t{0}K{1}> '.format(BLUE, WHITE))
     Op = raw_input(etiqueta)
 
     return int(Op)

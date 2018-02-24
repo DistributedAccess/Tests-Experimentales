@@ -63,23 +63,3 @@ def plot_confusion_matrix(cm, classes,
     if save:
         #path = "/home/verriva/Detection_Recognition/Pruebas"
         plt.savefig(path)
-
-"""
-# Compute confusion matrix
-cnf_matrix = confusion_matrix(y_test, y_pred)
-print y_test
-print y_pred
-print cnf_matrix
-np.set_printoptions(precision=2)
-
-# Plot non-normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names,
-                      title='Confusion matrix, without normalization')
-
-# Plot normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-                      title='Normalized confusion matrix')
-
-plt.show()"""

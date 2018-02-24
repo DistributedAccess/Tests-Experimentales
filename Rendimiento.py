@@ -136,11 +136,46 @@ def Preparar_Ruido(Directorios, Detect_Op):
 def Predecir_Imagenes(fotos, etiquetas, algoritmo):
     A = []
     c = 0
+    medianita = 0
+    Distancia = [0,0,0]#MINIMO, MAXIMO, PROMEDIO
+    Anterior = []
+
     for i in fotos:
         a = Reconocimiento.Prediccion(i,algoritmo)
         A.append(a[0][0])
         print("Real: %s, Prediccion: %s, Distancia Euclidiana: %s, Algoritmo: %s" % (etiquetas[c], a[0][0], a[0][1], algoritmo))
+
+        #Validacion_Cruzada
+
+        if(algoritmo == 'EigenFace'):
+            if(etiquetas[c] == a[0][0]):
+                medianita = medianita + 1
+            #DISTANCIA EUCLUDIA
+            Anterior.append(a[0][1])
+            Distancia[2] = Distancia[2] + a[0][1]
+
+        elif(algoritmo == 'FisherFace'):
+            if(etiquetas[c] == a[0][0]):
+                medianita = medianita + 1
+            #DISTANCIA EUCLUDIA
+            Anterior.append(a[0][1])
+            Distancia[2] = Distancia[2] + a[0][1]
+
+        elif(algoritmo == 'LBPH'):
+            if(etiquetas[c] == a[0][0]):
+                medianita = medianita + 1
+            #DISTANCIA EUCLUDIA
+            Anterior.append(a[0][1])
+            Distancia[2] = Distancia[2] + a[0][1]
         c = c+1
+    Distancia[0] = min(Anterior)
+    Distancia[1] = max(Anterior)
+    medianita = (medianita / float(c))*100   #SACAMOS LA MEDIA APOCO NO?
+    Distancia[2] = Distancia[2] / float(c) #SACAMOS OTRA MEDIA COMO CHINGADOS NO!!??
+
+    print ("Prediccion media: ",medianita)
+    print ("Distancia minima: %s Distancia maxima: %s Distancia Media: %s" % (Distancia[0],Distancia[1],Distancia[2]))
+
     return etiquetas, A
 
 def Predecir_Imageness(fotos, algoritmo):
@@ -178,6 +213,10 @@ def Normal():
     UM  = None
     CO  = None
 
+    K = []
+    KI = None
+    KCont = 0
+
     Entrenamiento = []
     Prediccion    = []
     while(True):
@@ -196,31 +235,38 @@ def Normal():
             CO = Menu.Componentes()
             Reconocimiento.Configurar_Componentes(CO)
         elif(Op == '6'):
-            print('\n\t Preparando Directorios...')
-            Entrenamiento, Prediccion = Preparar_Directorios(BD,PO,CL)
-            print('\n\t Entrenado al Sistema...')
-            Reconocimiento.Entrenamiento(Entrenamiento[0],Entrenamiento[1])
+            KI = Menu.K()
+        elif(Op == '7'):
+            while(KCont < KI):
+                print('\n\t Preparando Directorios...')
+                Entrenamiento, Prediccion = Preparar_Directorios(BD,PO,CL)
+                print('\n\t Entrenado al Sistema...')
+                Reconocimiento.Entrenamiento(Entrenamiento[0],Entrenamiento[1])
 
-            real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'EigenFace')
-            f=Etiquetas(real)
-            cnf_matrix = confusion_matrix(real,pred)
-            plt.figure()
-            Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                  title='EigenFace')
+                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'EigenFace')
+                f=Etiquetas(real)
+                cnf_matrix = confusion_matrix(real,pred)
+                #plt.figure()
+                Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
+                                    title='EigenFace')
 
-            real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'FisherFace')
-            f=Etiquetas(real)
-            cnf_matrix = confusion_matrix(real,pred)
-            plt.figure()
-            Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                  title='FisherFace')
+                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'FisherFace')
+                f=Etiquetas(real)
+                cnf_matrix = confusion_matrix(real,pred)
+                #plt.figure()
+                Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
+                                    title='FisherFace')
 
-            real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'LBPH')
-            cnf_matrix = confusion_matrix(real,pred)
-            plt.figure()
-            Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                  title='LBPH')
-            plt.show()
+                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'LBPH')
+                cnf_matrix = confusion_matrix(real,pred)
+                plt.figure()
+                Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
+                                    title='LBPH')
+                #plt.show()
+
+                KCont = KCont + 1
+            KCont = 0
+            KI = 0
 
         elif(Op == 'E'):
             break
@@ -320,7 +366,6 @@ def La_Magia(path,bd,cl):
 
             vader = ""#REINICIO
         darth = ""#REINICIO
-
 
 def Crear_Directorios_P():
     Directorio = os.listdir("/home/verriva/Detection_Recognition/Pruebas")
