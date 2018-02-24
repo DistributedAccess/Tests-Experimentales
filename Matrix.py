@@ -61,5 +61,5 @@ def plot_confusion_matrix(cm, classes,
     plt.xlabel('Predicted label')
 
     if save:
-        #path = "/home/verriva/Detection_Recognition/Pruebas"
+        #path = "/home/verriva/Tests-Experimentales/Cruzada"
         plt.savefig(path)

@@ -133,18 +133,22 @@ def Preparar_Ruido(Directorios, Detect_Op):
 
     return Face
 
-def Predecir_Imagenes(fotos, etiquetas, algoritmo):
+def Predecir_Imagenes(fotos, etiquetas, algoritmo,kiss):
     A = []
     c = 0
     medianita = 0
     Distancia = [0,0,0]#MINIMO, MAXIMO, PROMEDIO
     Anterior = []
 
+    archi = ("%s_%s.txt"%(algoritmo,kiss))
+
+    files = open(archi,"w")
+
     for i in fotos:
         a = Reconocimiento.Prediccion(i,algoritmo)
         A.append(a[0][0])
-        print("Real: %s, Prediccion: %s, Distancia Euclidiana: %s, Algoritmo: %s" % (etiquetas[c], a[0][0], a[0][1], algoritmo))
-
+        Skywalker =  "\n Real: %s, Prediccion: %s, Distancia Euclidiana: %s, Algoritmo: %s" % (etiquetas[c], a[0][0], a[0][1], algoritmo)
+        files.write(Skywalker)
         #Validacion_Cruzada
 
         if(algoritmo == 'EigenFace'):
@@ -173,10 +177,13 @@ def Predecir_Imagenes(fotos, etiquetas, algoritmo):
     medianita = (medianita / float(c))*100   #SACAMOS LA MEDIA APOCO NO?
     Distancia[2] = Distancia[2] / float(c) #SACAMOS OTRA MEDIA COMO CHINGADOS NO!!??
 
-    print ("Prediccion media: ",medianita)
-    print ("Distancia minima: %s Distancia maxima: %s Distancia Media: %s" % (Distancia[0],Distancia[1],Distancia[2]))
+    R2D2 =  ("\n Prediccion media: %s" %(medianita))
+    C3PO =  ("\n Distancia minima: %s Distancia maxima: %s Distancia Media: %s" % (Distancia[0],Distancia[1],Distancia[2]))
+    files.write(R2D2)
+    files.write(C3PO)
+    files.close()
 
-    return etiquetas, A
+    return etiquetas, A, medianita
 
 def Predecir_Imageness(fotos, algoritmo):
     P = [0,0]
@@ -217,6 +224,10 @@ def Normal():
     KI = None
     KCont = 0
 
+    med1 = 0
+    med2 = 0
+    med3 = 0
+
     Entrenamiento = []
     Prediccion    = []
     while(True):
@@ -238,35 +249,47 @@ def Normal():
             KI = Menu.K()
         elif(Op == '7'):
             while(KCont < KI):
+                Leila = "/home/verriva/Tests-Experimentales/Cruzada/"
                 print('\n\t Preparando Directorios...')
                 Entrenamiento, Prediccion = Preparar_Directorios(BD,PO,CL)
                 print('\n\t Entrenado al Sistema...')
                 Reconocimiento.Entrenamiento(Entrenamiento[0],Entrenamiento[1])
 
-                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'EigenFace')
+                real,pred,med=Predecir_Imagenes(Prediccion[0],Prediccion[1],'EigenFace',KCont)
                 f=Etiquetas(real)
                 cnf_matrix = confusion_matrix(real,pred)
+                med1 = med1 + med
                 #plt.figure()
                 Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                    title='EigenFace')
+                                    title='EigenFace', save=True, path=(Leila+"EigenFace"+str(KCont)))
 
-                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'FisherFace')
+                real,pred,med=Predecir_Imagenes(Prediccion[0],Prediccion[1],'FisherFace',KCont)
                 f=Etiquetas(real)
                 cnf_matrix = confusion_matrix(real,pred)
+                med2 = med2 + med
                 #plt.figure()
                 Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                    title='FisherFace')
+                                    title='FisherFace', save=True, path=(Leila+"FisherFace"+str(KCont)))
 
-                real,pred=Predecir_Imagenes(Prediccion[0],Prediccion[1],'LBPH')
+                real,pred,med=Predecir_Imagenes(Prediccion[0],Prediccion[1],'LBPH',KCont)
                 cnf_matrix = confusion_matrix(real,pred)
-                plt.figure()
+                med3 = med3 + med
+                #plt.figure()
                 Matrix.plot_confusion_matrix(cnf_matrix, classes=f,
-                                    title='LBPH')
+                                    title='LBPH', save=True, path=(Leila+"LBPH"+str(KCont)))
                 #plt.show()
 
                 KCont = KCont + 1
+            med1 = med1 / float(KI)
+            med2 = med2 / float(KI)
+            med3 = med3 / float(KI)
+            print "Eigen Faces: %s, para k = %s" % (med1, KI)
+            print "Fisher Faces: %s, para k = %s" % (med2, KI)
+            print "LBPH: %s, para k = %s" % (med3, KI)
             KCont = 0
             KI = 0
+
+            Opsi = raw_input("Press Enter")
 
         elif(Op == 'E'):
             break
