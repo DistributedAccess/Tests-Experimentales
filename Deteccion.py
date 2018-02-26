@@ -30,6 +30,135 @@ def Deteccion_Haar(Imagen):
 
     return Recorte
 
+def Deteccion_Haar2(Imagen):
+    #   Esta_Funcion detecta los rostros de la Imagen de Entrada y regresa
+    #   el array del numero de rostros y la ubicacion de cada uno
+
+    global Recorte
+    #   Cargamos la imagen
+
+    #   Convertimos a escala de grises
+
+    #   Cargamos el clasificador
+    haar_face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
+
+    #   Detectamos rostros
+    faces = haar_face_cascade.detectMultiScale(Imagen, scaleFactor=1.1, minNeighbors=5);
+    #return faces
+    for (x,y,w,h) in faces:
+        Recorte = Imagen[y:y+w, x:x+h]
+
+    return Recorte
+
+def Haar_Normalizado(Imagen):
+    global Recorte
+    #   Cargamos la imagen
+    Image = cv2.imread(Imagen)
+    Size = Image.shape #GUARDA EL TAMANO DEL ROSTRO
+    #   Convertimos a escala de grises
+    Gray = cv2.cvtColor(Image, cv2.COLOR_BGR2GRAY)
+
+    #   Cargamos el clasificador
+    haar_face_cascade = cv2.CascadeClassifier('haarcascade_frontalface_alt.xml')
+
+    #   Detectamos rostros
+    faces = haar_face_cascade.detectMultiScale(Gray, scaleFactor=1.1, minNeighbors=5);
+
+
+    for (x,y,w,h) in faces:
+        Recorte = Gray[y:y+w, x:x+h]    #Rostro Recortado
+    #Recorte = Recort(Gray,faces)
+    #print Recorte
+
+    Derecho, Izquier = Eye_Detect(Recorte)  #Ojo Derecho y Izquierdo
+
+    if(Derecho or Izquier):    #SIGNIFICA QUE DETECTO OJITOS
+
+        #   DISTANCIA ENTRE LOS OJOS PARA POSTERIOR AJUSTE
+        Hipotenusa = math.sqrt(math.pow((Derecho[0]-Izquier[0]),2)+math.pow((Derecho[1]-Izquier[1]),2))  #HIPOTENUSA
+        CatAdyacen = Derecho[0] - Izquier[0]    #   CATETO ADYACENTE
+        CatOpuesto = Derecho[1] - Izquier[1]    #   CATETO OPUESTO
+        Angulo = math.acos(CatAdyacen/Hipotenusa)
+        #   ANGULO EN RADIANES
+        Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
+        print Angulo
+        if(Derecho[1] > Izquier[1]):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
+            Angulo = Angulo * (1)
+        elif(Izquier[1] > Derecho[1]):
+            Angulo = Angulo * (-1)
+        print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+        #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
+        Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
+        dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
+
+        #   ESCALAMOS LA DISTANCIA A 90 PIXELES ENTRE LOS OJITOS
+        Escala = 90 / Hipotenusa
+        print "ESCALA ojos"
+        print (Escala * Hipotenusa), Hipotenusa
+        print type(Escala)
+        print type(Size[0])
+        Rows = float(Size[0]) * Escala #ROWS
+        Cols = float(Size[1]) * Escala #COLS
+        print "tamano de la imagen real y,x"
+        print Size[0],Size[1]
+        print "Escala chidorina y,x"
+        print Rows, Cols
+        Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
+
+        #   DETECTAMOS EL ROSTRO OTRAVEZ...
+        Feis = Deteccion_Haar2(Resizis)
+        Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
+        print "Rostro Cuadro x,y"
+        print Seix[0],Seix[1]
+        if(Seix[0] < 192):#CASO EXTREMO, EL CUADRO DEL ROSTRO ES MENOR QUE LA RESOLUCION REQUERIDA
+            Feis = cv2.resize(Feis, (192,192))
+            Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
+            print "Rostro Cuadro Resizido x,y"
+            print Seix[0],Seix[1]
+
+        #   YA CASI, AHORA RECORTAMOS A 168X192
+        centroy = Seix[0]/2
+        centrox = Seix[1]/2
+        Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
+        Chap = Chop.shape
+        print "REcorte"
+        print Chap[0], Chap[1]
+
+        #   ECUALIZAMOS Y SHA <3
+        Equ = cv2.equalizeHist(Chop)
+
+        cv2.imshow("Normal",Gray)
+        cv2.imshow("Giro",dst)
+        cv2.imshow("Resize",Resizis)
+        cv2.imshow("Rostro, Casi normal",Feis)
+        cv2.imshow("Rostro, Recprtado",Chop)
+        cv2.imshow("Esta es la chida",Equ)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    else:           #SIGNIFICA QUE NO DETECTO NINGUN OJO
+
+        #   ESCALAMOS LA DISTANCIA A 192x192
+        Resizis = cv2.resize(Recorte, (192, 192))
+
+        #   YA CASI, AHORA RECORTAMOS A 168X192
+        Chip = Resizis[0:192,12:180]
+        Chap = Chip.shape
+        print Chap[0], Chap[1]
+
+        #   ECUALIZAMOS Y SHA <3
+        Equ = cv2.equalizeHist(Chip)
+
+        cv2.imshow("Normal",Gray)
+        cv2.imshow("Rostro",Recorte)
+        cv2.imshow("ESCALAMOS A 192x192",Resizis)
+        cv2.imshow("Rostro, Recprtado",Chip)
+        cv2.imshow("Esta es la chida",Equ)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return "OK"
+
 def Deteccion_LBP(Imagen):
     #   Esta_Funcion detecta los rostros de la Imagen de Entrada y regresa
     #   el array del numero de rostros y la ubicacion de cada uno
@@ -71,12 +200,6 @@ def Deteccion_LBP2(Imagen):
         Recorte = Imagen[y:y+w, x:x+h]
 
     return Recorte
-
-def Recort(Gray,faces):
-    Recte = None
-    for (x,y,w,h) in faces:
-        Recte = Gray[y:y+w, x:x+h]    #Rostro Recort
-    return Recte
 
 def LBP_Normalizado(Imagen):
     global Recorte
