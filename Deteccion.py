@@ -72,6 +72,12 @@ def Deteccion_LBP2(Imagen):
 
     return Recorte
 
+def Recort(Gray,faces):
+    Recte = None
+    for (x,y,w,h) in faces:
+        Recte = Gray[y:y+w, x:x+h]    #Rostro Recort
+    return Recte
+
 def LBP_Normalizado(Imagen):
     global Recorte
     #   Cargamos la imagen
@@ -86,72 +92,116 @@ def LBP_Normalizado(Imagen):
     #   Detectamos rostros
     faces = lbp_face_cascade.detectMultiScale(Gray, scaleFactor=1.1, minNeighbors=5);
 
+
     for (x,y,w,h) in faces:
-        Recorte = Gray[y:y+w, x:x+h]
+        Recorte = Gray[y:y+w, x:x+h]    #Rostro Recortado
+    #Recorte = Recort(Gray,faces)
+    #print Recorte
 
-    Derecho, Izquier = Eye_Detect(Recorte)
+    Derecho, Izquier = Eye_Detect(Recorte)  #Ojo Derecho y Izquierdo
 
-    #   DISTANCIA ENTRE LOS OJOS PARA POSTERIOR AJUSTE
-    Hipotenusa = math.sqrt(math.pow((Derecho[0]-Izquier[0]),2)+math.pow((Derecho[1]-Izquier[1]),2))  #HIPOTENUSA
-    CatAdyacen = Derecho[0] - Izquier[0]    #   CATETO ADYACENTE
-    CatOpuesto = Derecho[1] - Izquier[1]    #   CATETO OPUESTO
-    Angulo = math.acos(CatAdyacen/Hipotenusa)
-    #   ANGULO EN RADIANES
-    Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
-    if((Angulo > 0) or (Angulo < 0)):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
-        Angulo = Angulo * (-1)
-    print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
-    #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
-    Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
-    dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
+    if(Derecho or Izquier):    #SIGNIFICA QUE DETECTO OJITOS
 
-    #   ESCALAMOS LA DISTANCIA A 96 PIXELES ENTRE LOS OJITOS
-    Escala = 90 / Hipotenusa
-    print (Escala * Hipotenusa), Hipotenusa
-    print type(Escala)
-    print type(Size[0])
-    Rows = float(Size[0]) * Escala #ROWS
-    Cols = float(Size[1]) * Escala #COLS
-    print Size[0],Size[1]
-    print Rows, Cols
-    Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
+        #   DISTANCIA ENTRE LOS OJOS PARA POSTERIOR AJUSTE
+        Hipotenusa = math.sqrt(math.pow((Derecho[0]-Izquier[0]),2)+math.pow((Derecho[1]-Izquier[1]),2))  #HIPOTENUSA
+        CatAdyacen = Derecho[0] - Izquier[0]    #   CATETO ADYACENTE
+        CatOpuesto = Derecho[1] - Izquier[1]    #   CATETO OPUESTO
+        Angulo = math.acos(CatAdyacen/Hipotenusa)
+        #   ANGULO EN RADIANES
+        Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
+        print Angulo
+        if(Derecho[1] > Izquier[1]):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
+            Angulo = Angulo * (1)
+        elif(Izquier[1] > Derecho[1]):
+            Angulo = Angulo * (-1)
+        print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+        #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
+        Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
+        dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
 
-    #   DETECTAMOS EL ROSTRO OTRAVEZ...
-    Feis = Deteccion_LBP2(Resizis)
-    Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
-    print Seix[0],Seix[1]
+        #   ESCALAMOS LA DISTANCIA A 96 PIXELES ENTRE LOS OJITOS
+        Escala = 90 / Hipotenusa
+        print "ESCALA ojos"
+        print (Escala * Hipotenusa), Hipotenusa
+        print type(Escala)
+        print type(Size[0])
+        Rows = float(Size[0]) * Escala #ROWS
+        Cols = float(Size[1]) * Escala #COLS
+        print "tamano de la imagen real y,x"
+        print Size[0],Size[1]
+        print "Escala chidorina y,x"
+        print Rows, Cols
+        Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
 
-    #   YA CASI, AHORA RECORTAMOS A 168X192
-    centroy = Seix[0]/2
-    centrox = Seix[1]/2
-    Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
-    Chap = Chop.shape
-    print Chap[0], Chap[1]
+        #   DETECTAMOS EL ROSTRO OTRAVEZ...
+        Feis = Deteccion_LBP2(Resizis)
+        Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
+        print "Rostro Cuadro x,y"
+        print Seix[0],Seix[1]
+        if(Seix[0] < 192):#CASO EXTREMO, EL CUADRO DEL ROSTRO ES MENOR QUE LA RESOLUCION REQUERIDA
+            Feis = cv2.resize(Feis, (192,192))
+            Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
+            print "Rostro Cuadro Resizido x,y"
+            print Seix[0],Seix[1]
 
-    #   ECUALIZAMOS Y SHA <3
-    Equ = cv2.equalizeHist(Chop)
+        #   YA CASI, AHORA RECORTAMOS A 168X192
+        centroy = Seix[0]/2
+        centrox = Seix[1]/2
+        Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
+        Chap = Chop.shape
+        print "REcorte"
+        print Chap[0], Chap[1]
 
-    cv2.imshow("Normal",Gray)
-    cv2.imshow("Giro",dst)
-    cv2.imshow("Resize",Resizis)
-    cv2.imshow("Rostro, Casi normal",Feis)
-    cv2.imshow("Rostro, Recprtado",Chop)
-    cv2.imshow("Esta es la chida",Equ)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
+        #   ECUALIZAMOS Y SHA <3
+        Equ = cv2.equalizeHist(Chop)
+
+        cv2.imshow("Normal",Gray)
+        cv2.imshow("Giro",dst)
+        cv2.imshow("Resize",Resizis)
+        cv2.imshow("Rostro, Casi normal",Feis)
+        cv2.imshow("Rostro, Recprtado",Chop)
+        cv2.imshow("Esta es la chida",Equ)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    else:           #SIGNIFICA QUE NO DETECTO NINGUN OJO
+
+        #   ESCALAMOS LA DISTANCIA A 192x192
+        Resizis = cv2.resize(Recorte, (192, 192))
+
+        #   YA CASI, AHORA RECORTAMOS A 168X192
+        Chip = Resizis[0:192,12:180]
+        Chap = Chip.shape
+        print Chap[0], Chap[1]
+
+        #   ECUALIZAMOS Y SHA <3
+        Equ = cv2.equalizeHist(Chip)
+
+        cv2.imshow("Normal",Gray)
+        cv2.imshow("Rostro",Recorte)
+        cv2.imshow("ESCALAMOS A 192x192",Resizis)
+        cv2.imshow("Rostro, Recprtado",Chip)
+        cv2.imshow("Esta es la chida",Equ)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
+    return "OK"
+
 
 
 def Eye_Detect(Rostro):
     haar_eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
     eye = haar_eye_cascade.detectMultiScale(Rostro, scaleFactor=1.1, minNeighbors=5);
 
-    eye[:,2:] += eye[:,:2]  #PASO DE LA MUERTE
 
+    #eye[:,2:] += eye[:,:2]  #PASO DE LA MUERTE
     Derecho = []
     Izquier = []
 
     #   UBICACION DEL OJO DERECHO Y IZQUIERDO
     if (len(eye) == 2):
+        eye[:,2:] += eye[:,:2]  #PASO DE LA MUERTE
+
         a = eye[0][0] + ((eye[0][2] - eye[0][0])/2)
         b = eye[0][1] + ((eye[0][3] - eye[0][1])/2)
 
