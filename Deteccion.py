@@ -52,6 +52,26 @@ def Deteccion_LBP(Imagen):
 
     return Recorte
 
+def Deteccion_LBP2(Imagen):
+    #   Esta_Funcion detecta los rostros de la Imagen de Entrada y regresa
+    #   el array del numero de rostros y la ubicacion de cada uno
+
+    global Recorte
+    #   Cargamos la imagen
+
+    #   Convertimos a escala de grises
+
+    #   Cargamos el clasificador
+    lbp_face_cascade = cv2.CascadeClassifier('lbpcascade_frontalface.xml')
+
+    #   Detectamos rostros
+    faces = lbp_face_cascade.detectMultiScale(Imagen, scaleFactor=1.1, minNeighbors=5);
+    #return faces
+    for (x,y,w,h) in faces:
+        Recorte = Imagen[y:y+w, x:x+h]
+
+    return Recorte
+
 def LBP_Normalizado(Imagen):
     global Recorte
     #   Cargamos la imagen
@@ -86,7 +106,7 @@ def LBP_Normalizado(Imagen):
     dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
 
     #   ESCALAMOS LA DISTANCIA A 96 PIXELES ENTRE LOS OJITOS
-    Escala = 96 / Hipotenusa
+    Escala = 90 / Hipotenusa
     print (Escala * Hipotenusa), Hipotenusa
     print type(Escala)
     print type(Size[0])
@@ -94,11 +114,29 @@ def LBP_Normalizado(Imagen):
     Cols = float(Size[1]) * Escala #COLS
     print Size[0],Size[1]
     print Rows, Cols
-    Resizis = cv2.resize(dst, (int(Cols), int(Rows)))   
+    Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
+
+    #   DETECTAMOS EL ROSTRO OTRAVEZ...
+    Feis = Deteccion_LBP2(Resizis)
+    Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
+    print Seix[0],Seix[1]
+
+    #   YA CASI, AHORA RECORTAMOS A 168X192
+    centroy = Seix[0]/2
+    centrox = Seix[1]/2
+    Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
+    Chap = Chop.shape
+    print Chap[0], Chap[1]
+
+    #   ECUALIZAMOS Y SHA <3
+    Equ = cv2.equalizeHist(Chop)
 
     cv2.imshow("Normal",Gray)
     cv2.imshow("Giro",dst)
     cv2.imshow("Resize",Resizis)
+    cv2.imshow("Rostro, Casi normal",Feis)
+    cv2.imshow("Rostro, Recprtado",Chop)
+    cv2.imshow("Esta es la chida",Equ)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
