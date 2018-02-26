@@ -81,60 +81,61 @@ def Haar_Normalizado(Imagen):
         Angulo = math.acos(CatAdyacen/Hipotenusa)
         #   ANGULO EN RADIANES
         Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
-        print Angulo
+        #print Angulo
         if(Derecho[1] > Izquier[1]):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
             Angulo = Angulo * (1)
         elif(Izquier[1] > Derecho[1]):
             Angulo = Angulo * (-1)
-        print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+        #print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
         #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
         Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
         dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
 
         #   ESCALAMOS LA DISTANCIA A 90 PIXELES ENTRE LOS OJITOS
         Escala = 90 / Hipotenusa
-        print "ESCALA ojos"
-        print (Escala * Hipotenusa), Hipotenusa
-        print type(Escala)
-        print type(Size[0])
+        #print "ESCALA ojos"
+        #print (Escala * Hipotenusa), Hipotenusa
+        #print type(Escala)
+        #print type(Size[0])
         Rows = float(Size[0]) * Escala #ROWS
         Cols = float(Size[1]) * Escala #COLS
-        print "tamano de la imagen real y,x"
-        print Size[0],Size[1]
-        print "Escala chidorina y,x"
-        print Rows, Cols
+        #print "tamano de la imagen real y,x"
+        #print Size[0],Size[1]
+        #print "Escala chidorina y,x"
+        #print Rows, Cols
         Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
 
         #   DETECTAMOS EL ROSTRO OTRAVEZ...
         Feis = Deteccion_Haar2(Resizis)
         Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
-        print "Rostro Cuadro x,y"
-        print Seix[0],Seix[1]
+        #print "Rostro Cuadro x,y"
+        #print Seix[0],Seix[1]
         if(Seix[0] < 192):#CASO EXTREMO, EL CUADRO DEL ROSTRO ES MENOR QUE LA RESOLUCION REQUERIDA
             Feis = cv2.resize(Feis, (192,192))
             Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
-            print "Rostro Cuadro Resizido x,y"
-            print Seix[0],Seix[1]
+            #print "Rostro Cuadro Resizido x,y"
+            #print Seix[0],Seix[1]
 
         #   YA CASI, AHORA RECORTAMOS A 168X192
         centroy = Seix[0]/2
         centrox = Seix[1]/2
         Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
         Chap = Chop.shape
-        print "REcorte"
-        print Chap[0], Chap[1]
+        #print "REcorte"
+        #print Chap[0], Chap[1]
 
         #   ECUALIZAMOS Y SHA <3
         Equ = cv2.equalizeHist(Chop)
 
-        cv2.imshow("Normal",Gray)
+        """cv2.imshow("Normal",Gray)
         cv2.imshow("Giro",dst)
         cv2.imshow("Resize",Resizis)
         cv2.imshow("Rostro, Casi normal",Feis)
         cv2.imshow("Rostro, Recprtado",Chop)
         cv2.imshow("Esta es la chida",Equ)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.destroyAllWindows()"""
+        return Equ
 
     else:           #SIGNIFICA QUE NO DETECTO NINGUN OJO
 
@@ -144,20 +145,19 @@ def Haar_Normalizado(Imagen):
         #   YA CASI, AHORA RECORTAMOS A 168X192
         Chip = Resizis[0:192,12:180]
         Chap = Chip.shape
-        print Chap[0], Chap[1]
+        #print Chap[0], Chap[1]
 
         #   ECUALIZAMOS Y SHA <3
         Equ = cv2.equalizeHist(Chip)
 
-        cv2.imshow("Normal",Gray)
+        """cv2.imshow("Normal",Gray)
         cv2.imshow("Rostro",Recorte)
         cv2.imshow("ESCALAMOS A 192x192",Resizis)
         cv2.imshow("Rostro, Recprtado",Chip)
         cv2.imshow("Esta es la chida",Equ)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    return "OK"
+        cv2.destroyAllWindows()"""
+        return Equ
 
 def Deteccion_LBP(Imagen):
     #   Esta_Funcion detecta los rostros de la Imagen de Entrada y regresa
@@ -232,60 +232,61 @@ def LBP_Normalizado(Imagen):
         Angulo = math.acos(CatAdyacen/Hipotenusa)
         #   ANGULO EN RADIANES
         Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
-        print Angulo
+        #print Angulo
         if(Derecho[1] > Izquier[1]):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
             Angulo = Angulo * (1)
         elif(Izquier[1] > Derecho[1]):
             Angulo = Angulo * (-1)
-        print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+        #print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
         #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
         Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
         dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
 
         #   ESCALAMOS LA DISTANCIA A 96 PIXELES ENTRE LOS OJITOS
         Escala = 90 / Hipotenusa
-        print "ESCALA ojos"
-        print (Escala * Hipotenusa), Hipotenusa
-        print type(Escala)
-        print type(Size[0])
+        #print "ESCALA ojos"
+        #print (Escala * Hipotenusa), Hipotenusa
+        #print type(Escala)
+        #print type(Size[0])
         Rows = float(Size[0]) * Escala #ROWS
         Cols = float(Size[1]) * Escala #COLS
-        print "tamano de la imagen real y,x"
-        print Size[0],Size[1]
-        print "Escala chidorina y,x"
-        print Rows, Cols
+        #print "tamano de la imagen real y,x"
+        #print Size[0],Size[1]
+        #print "Escala chidorina y,x"
+        #print Rows, Cols
         Resizis = cv2.resize(dst, (int(Cols), int(Rows)))
 
         #   DETECTAMOS EL ROSTRO OTRAVEZ...
         Feis = Deteccion_LBP2(Resizis)
         Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
-        print "Rostro Cuadro x,y"
-        print Seix[0],Seix[1]
+        #print "Rostro Cuadro x,y"
+        #print Seix[0],Seix[1]
         if(Seix[0] < 192):#CASO EXTREMO, EL CUADRO DEL ROSTRO ES MENOR QUE LA RESOLUCION REQUERIDA
             Feis = cv2.resize(Feis, (192,192))
             Seix = Feis.shape #GUARDA EL TAMANO DEL ROSTRO
-            print "Rostro Cuadro Resizido x,y"
-            print Seix[0],Seix[1]
+            #print "Rostro Cuadro Resizido x,y"
+            #print Seix[0],Seix[1]
 
         #   YA CASI, AHORA RECORTAMOS A 168X192
         centroy = Seix[0]/2
         centrox = Seix[1]/2
         Chop = Feis[(centroy-96):(centroy+96),(centrox-84):(centrox+84)]
         Chap = Chop.shape
-        print "REcorte"
-        print Chap[0], Chap[1]
+        #print "REcorte"
+        #print Chap[0], Chap[1]
 
         #   ECUALIZAMOS Y SHA <3
         Equ = cv2.equalizeHist(Chop)
 
-        cv2.imshow("Normal",Gray)
+        """cv2.imshow("Normal",Gray)
         cv2.imshow("Giro",dst)
         cv2.imshow("Resize",Resizis)
         cv2.imshow("Rostro, Casi normal",Feis)
         cv2.imshow("Rostro, Recprtado",Chop)
         cv2.imshow("Esta es la chida",Equ)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        cv2.destroyAllWindows()"""
+        return Equ
 
     else:           #SIGNIFICA QUE NO DETECTO NINGUN OJO
 
@@ -295,20 +296,19 @@ def LBP_Normalizado(Imagen):
         #   YA CASI, AHORA RECORTAMOS A 168X192
         Chip = Resizis[0:192,12:180]
         Chap = Chip.shape
-        print Chap[0], Chap[1]
+        #print Chap[0], Chap[1]
 
         #   ECUALIZAMOS Y SHA <3
         Equ = cv2.equalizeHist(Chip)
 
-        cv2.imshow("Normal",Gray)
+        """cv2.imshow("Normal",Gray)
         cv2.imshow("Rostro",Recorte)
         cv2.imshow("ESCALAMOS A 192x192",Resizis)
         cv2.imshow("Rostro, Recprtado",Chip)
         cv2.imshow("Esta es la chida",Equ)
         cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
-    return "OK"
+        cv2.destroyAllWindows"""
+        return Equ
 
 
 
