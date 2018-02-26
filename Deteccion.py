@@ -1,3 +1,5 @@
+import crop_face
+import math
 import cv2
 
 Recorte = None
@@ -26,7 +28,7 @@ def Deteccion_Haar(Imagen):
     for (x,y,w,h) in faces:
         Recorte = Gray[y:y+w, x:x+h]
 
-    return cv2.resize(Recorte, (200, 200))
+    return Recorte
 
 def Deteccion_LBP(Imagen):
     #   Esta_Funcion detecta los rostros de la Imagen de Entrada y regresa
@@ -48,13 +50,165 @@ def Deteccion_LBP(Imagen):
     for (x,y,w,h) in faces:
         Recorte = Gray[y:y+w, x:x+h]
 
-    return cv2.resize(Recorte, (200, 200))
+    return Recorte
+
+def LBP_Normalizado(Imagen):
+    global Recorte
+    #   Cargamos la imagen
+    Image = cv2.imread(Imagen)
+    Size = Image.shape #GUARDA EL TAMANO DEL ROSTRO
+    #   Convertimos a escala de grises
+    Gray = cv2.cvtColor(Image, cv2.COLOR_BGR2GRAY)
+
+    #   Cargamos el clasificador
+    lbp_face_cascade = cv2.CascadeClassifier('lbpcascade_frontalface.xml')
+
+    #   Detectamos rostros
+    faces = lbp_face_cascade.detectMultiScale(Gray, scaleFactor=1.1, minNeighbors=5);
+
+    for (x,y,w,h) in faces:
+        Recorte = Gray[y:y+w, x:x+h]
+
+    Derecho, Izquier = Eye_Detect(Recorte)
+
+    #   DISTANCIA ENTRE LOS OJOS PARA POSTERIOR AJUSTE
+    Hipotenusa = math.sqrt(math.pow((Derecho[0]-Izquier[0]),2)+math.pow((Derecho[1]-Izquier[1]),2))  #HIPOTENUSA
+    CatAdyacen = Derecho[0] - Izquier[0]    #   CATETO ADYACENTE
+    CatOpuesto = Derecho[1] - Izquier[1]    #   CATETO OPUESTO
+    Angulo = math.acos(CatAdyacen/Hipotenusa)
+    #   ANGULO EN RADIANES
+    Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
+    if((Angulo > 0) or (Angulo < 0)):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
+        Angulo = Angulo * (-1)
+    print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+    #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
+    Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
+    dst = cv2.warpAffine(Gray,Rotate,(Size[1],Size[0]))         #SE APLICA , cols, rows
+
+    #   ESCALAMOS LA DISTANCIA A 96 PIXELES ENTRE LOS OJITOS
+    Escala = 96 / Hipotenusa
+    print (Escala * Hipotenusa), Hipotenusa
+    print type(Escala)
+    print type(Size[0])
+    Rows = float(Size[0]) * Escala #ROWS
+    Cols = float(Size[1]) * Escala #COLS
+    print Size[0],Size[1]
+    print Rows, Cols
+    Resizis = cv2.resize(dst, (int(Cols), int(Rows)))   
+
+    cv2.imshow("Normal",Gray)
+    cv2.imshow("Giro",dst)
+    cv2.imshow("Resize",Resizis)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+def Eye_Detect(Rostro):
+    haar_eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    eye = haar_eye_cascade.detectMultiScale(Rostro, scaleFactor=1.1, minNeighbors=5);
+
+    eye[:,2:] += eye[:,:2]  #PASO DE LA MUERTE
+
+    Derecho = []
+    Izquier = []
+
+    #   UBICACION DEL OJO DERECHO Y IZQUIERDO
+    if (len(eye) == 2):
+        a = eye[0][0] + ((eye[0][2] - eye[0][0])/2)
+        b = eye[0][1] + ((eye[0][3] - eye[0][1])/2)
+
+        c = eye[1][0] + ((eye[1][2] - eye[1][0])/2)
+        d = eye[1][1] + ((eye[1][3] - eye[1][1])/2)
+
+        if(a<c):    #IZQUIERDO
+            Izquier = [a,b]
+            Derecho = [c,d]
+        else:       #DERECHO
+            Izquier = [c,d]
+            Derecho = [a,b]
+
+    return Derecho, Izquier
+
+
+
+
+"""def Deteccion_Eye(Rostro):
+
+    Size = Rostro.shape #GUARDA EL TAMANO DEL ROSTRO
+
+    haar_eye_cascade = cv2.CascadeClassifier('haarcascade_eye.xml')
+    eye = haar_eye_cascade.detectMultiScale(Rostro, scaleFactor=1.1, minNeighbors=5);
+
+    eye[:,2:] += eye[:,:2]  #PASO DE LA MUERTE
+
+    Derecho = []
+    Izquier = []
+
+    #   UBICACION DEL OJO DERECHO Y IZQUIERDO
+    if (len(eye) == 2):
+        a = eye[0][0] + ((eye[0][2] - eye[0][0])/2)
+        b = eye[0][1] + ((eye[0][3] - eye[0][1])/2)
+
+        c = eye[1][0] + ((eye[1][2] - eye[1][0])/2)
+        d = eye[1][1] + ((eye[1][3] - eye[1][1])/2)
+
+        if(a<c):    #IZQUIERDO
+            Izquier = [a,b]
+            Derecho = [c,d]
+        else:       #DERECHO
+            Izquier = [c,d]
+            Derecho = [a,b]
+
+    #   DISTANCIA ENTRE LOS OJOS PARA POSTERIOR AJUSTE
+    Hipotenusa = math.sqrt(math.pow((Derecho[0]-Izquier[0]),2)+math.pow((Derecho[1]-Izquier[1]),2))  #HIPOTENUSA
+    CatAdyacen = Derecho[0] - Izquier[0]    #   CATETO ADYACENTE
+    CatOpuesto = Derecho[1] - Izquier[1]    #   CATETO OPUESTO
+    Angulo = math.acos(CatAdyacen/Hipotenusa)   or python
+    #   ANGULO EN RADIANES
+    Angulo = math.degrees(Angulo)   #   ANGULO EN GRADOS
+    if((Angulo > 0) or (Angulo < 0)):   # CON ESTA RUTINA ASEGURAMOS ARREGLAR LA IMAGEN
+        Angulo = Angulo * (-1)
+    print Hipotenusa, CatAdyacen, CatOpuesto, Angulo
+    #   ROTACION DE LA IMAGEN OJO IZQUIERDO COMO ORIGEN
+    Rotate = cv2.getRotationMatrix2D((Izquier[0],Izquier[1]),Angulo,1)   #ROTACION
+    dst = cv2.warpAffine(Rostro,Rotate,(Size[1],Size[0]))         #SE APLICA
+
+    cv2.imshow("Normal",Rostro)
+    cv2.imshow("Giro",dst)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+
+    return Izquier, Derecho"""
+
+def Normalizar(image, Algoritmo):
+
+    if(Algoritmo == "LBP"):
+        Rostro=Deteccion_LBP(image)     #OBTENEMOS EL ROSTRO DE LA IMAGEN
+        D,I = Deteccion_Eye(Rostro)
+        Norm = crop_face.CropFace(Rostro, eye_left=(I[0],I[1]), eye_right=(D[0],D[1]), offset_pct=(0.3,0.3), dest_sz=(200,200))
+        Norm = numpy.array(Norm)
+        return Norm
+
+    elif(Algoritmo == "Haar"):
+        Rostro=Deteccion_Haar(image)     #OBTENEMOS EL ROSTRO DE LA IMAGEN
+        D,I = Deteccion_Eye(Rostro)
+        Norm = crop_face.CropFace(Rostro, eye_left=(I[0],I[1]), eye_right=(D[0],D[1]), offset_pct=(0.2,0.2), dest_sz=(168,192))
+        Norm = numpy.array(Norm)
+        return Norm
 
 def Dibujar_Rectangulos(Faces, Image):
     for (x, y, w, h) in Faces:
         cv2.rectangle(Image, (x,y), (x+w,y+h), (0, 255, 0), 2)
 
     cv2.imshow('Rostros',Image)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+
+def Dibujar_Ojos(D,I,Imagen):
+    cv2.circle(Imagen, (D[0],D[1]), 5, (0,255,0),2)
+    cv2.circle(Imagen, (I[0],I[1]), 5, (255,0,0),2)
+    cv2.imshow("wao",Imagen)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 

@@ -34,6 +34,8 @@
 import sys
 import math
 from PIL import Image
+import numpy as np
+ #image = Image.fromarray(image)
 
 def Distance(p1,p2):
   dx = p2[0] - p1[0]
@@ -57,6 +59,7 @@ def ScaleRotateTranslate(image, angle, center = None, new_center = None, scale =
   d = -sine/sy
   e = cosine/sy
   f = y-nx*d-ny*e
+  #image = Image.fromarray(image)
   return image.transform(image.size, Image.AFFINE, (a,b,c,d,e,f), resample=resample)
 
 def CropFace(image, eye_left=(0,0), eye_right=(0,0), offset_pct=(0.2,0.2), dest_sz = (70,70)):
@@ -82,33 +85,3 @@ def CropFace(image, eye_left=(0,0), eye_right=(0,0), offset_pct=(0.2,0.2), dest_
   # resize it
   image = image.resize(dest_sz, Image.ANTIALIAS)
   return image
-
-def readFileNames():
-    try:
-        inFile = open('One.jpg')
-    except:
-        raise IOError('There is no file named path_to_created_csv_file.csv in current directory.')
-        return False
-
-    picPath = []
-    picIndex = []
-
-    for line in inFile.readlines():
-        if line != '':
-            fields = line.rstrip().split(';')
-            picPath.append(fields[0])
-            picIndex.append(int(fields[1]))
-
-    return (picPath, picIndex)
-
-
-if __name__ == "__main__":
-  [images, indexes]=readFileNames()
-if not os.path.exists("modified"):
-    os.makedirs("modified")
-for img in images:
-    image =  Image.open(img)
-    CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.1,0.1), dest_sz=(200,200)).save("modified/"+img.rstrip().split('/')[1]+"_10_10_200_200.jpg")
-    CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.2,0.2), dest_sz=(200,200)).save("modified/"+img.rstrip().split('/')[1]+"_20_20_200_200.jpg")
-    CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.3,0.3), dest_sz=(200,200)).save("modified/"+img.rstrip().split('/')[1]+"_30_30_200_200.jpg")
-    CropFace(image, eye_left=(252,364), eye_right=(420,366), offset_pct=(0.2,0.2)).save("modified/"+img.rstrip().split('/')[1]+"_20_20_70_70.jpg")
